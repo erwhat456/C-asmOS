@@ -1,0 +1,48 @@
+# assemble boot
+nasm -f bin boot.asm -o boot.bin
+
+# compile C (need 32-bit target)
+gcc -m32 -ffreestanding -c drivers.c -o drivers.o
+gcc -m32 -ffreestanding -c kernel.c -o kernel.o
+gcc -m32 -ffreestanding -c apps.c -o apps.o
+
+# link kernel at 0x10000
+ld -m elf_i386 -T linker.ld drivers.o kernel.o apps.o -o kernel.elf
+objcopy -O binary kernel.elf kernel.bin
+
+# create floppy-style image
+copy /b boot.bin + kernel.bin cinnanos.img   # (Windows)
+# on Linux: cat boot.bin kernel.bin > cinnanos.img
+
+# run in QEMU (floppy attached)
+qemu-system-i386 -fda cinnanos.img -m 64
+
+
+# Optional: Test in VirtualBox
+# 1. Create a new VM -> Other/Unknown (32-bit)
+# 2. Attach cinnaos.img as floppy or disk
+# 3. Boot it, please?
+
+            --- or, you can put this at the beginning of the nasm compiler---
+
+cd /d "E:\CinnaOS"
+
+
+I have done cd /d "E:/CinnaOS because the files are in a folder in my E:/ disk drive
+
+
+CinnaOS - 32-bit 9kb  OS - Operating System BIOS/UEFI  -  Nice operating system, right? (please say yes). OH and hello, how are you?
+
+
+                                                          ---  Minimum System Requirements  ---
+
+| Component        | Minimum                  | Recommended                            | Notes                                                                 |
+| ---------------- | ------------------------ | -------------------------------------- | --------------------------------------------------------------------- |
+| **CPU**          | Intel 80386 (or any x86) | Pentium / Core 2                       | Runs in 32-bit protected mode; no 64-bit instructions yet.            |
+| **RAM**          | 1 MB                     | 8 MB+                                  | VGA text mode + kernel + stack fits under 1 MB easily.                |
+| **Storage**      | 1.44 MB (floppy image)   | 10 MB+                                 | The bootloader expects a FAT12 or FAT32 disk; can be expanded to HDD. |
+| **Display**      | Standard VGA             | Any VGA-compatible GPU                 | Uses text mode (0xB8000).                                             |
+| **Input**        | PS/2 keyboard            | PS/2 keyboard + mouse (future support) | USB not yet implemented.                                              |
+| **BIOS**         | Legacy BIOS              | Any BIOS/UEFI with CSM                 | The bootloader uses BIOS interrupts (int 13h).                        |
+| **Architecture** | x86 32-bit               | Works fine under emulators             | Can be run in QEMU, Bochs, or VirtualBox.                             |
+
